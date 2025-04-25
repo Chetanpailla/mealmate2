@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375px, initial-scale=1.0">
+<title>MealMate</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#0B3B24',secondary:'#8FBC8F'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+width: 375px;
+margin: 0 auto;
+min-height: 762px;
+position: relative;
+overflow-x: hidden;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+.hide-scrollbar::-webkit-scrollbar {
+display: none;
+}
+.hide-scrollbar {
+-ms-overflow-style: none;
+scrollbar-width: none;
+}
+.meal-item {
+transition: all 0.3s ease;
+}
+.meal-item:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.meal-item.selected {
+border-color: #0B3B24;
+background-color: #F0FFF4;
+}
+.checkbox-custom {
+appearance: none;
+-webkit-appearance: none;
+width: 20px;
+height: 20px;
+border: 2px solid #E5E7EB;
+border-radius: 4px;
+outline: none;
+cursor: pointer;
+position: relative;
+transition: all 0.2s ease;
+}
+.checkbox-custom:checked {
+background-color: #0B3B24;
+border-color: #0B3B24;
+}
+.checkbox-custom:checked::after {
+content: '';
+position: absolute;
+left: 6px;
+top: 2px;
+width: 5px;
+height: 10px;
+border: solid white;
+border-width: 0 2px 2px 0;
+transform: rotate(45deg);
+}
+.range-slider {
+-webkit-appearance: none;
+width: 100%;
+height: 8px;
+border-radius: 4px;
+background: #E5E7EB;
+outline: none;
+}
+.range-slider::-webkit-slider-thumb {
+-webkit-appearance: none;
+appearance: none;
+width: 20px;
+height: 20px;
+border-radius: 50%;
+background: #0B3B24;
+cursor: pointer;
+transition: all 0.2s ease;
+}
+.range-slider::-webkit-slider-thumb:hover {
+transform: scale(1.1);
+}
+.toggle-switch {
+position: relative;
+display: inline-block;
+width: 40px;
+height: 24px;
+}
+.toggle-switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+.toggle-slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #E5E7EB;
+transition: .4s;
+border-radius: 34px;
+}
+.toggle-slider:before {
+position: absolute;
+content: "";
+height: 16px;
+width: 16px;
+left: 4px;
+bottom: 4px;
+background-color: white;
+transition: .4s;
+border-radius: 50%;
+}
+input:checked + .toggle-slider {
+background-color: #0B3B24;
+}
+input:checked + .toggle-slider:before {
+transform: translateX(16px);
+}
+</style>
+</head>
+<body class="bg-white">
+<!-- Onboarding Screen -->
+<div id="onboarding-screen" class="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-green-50 px-6 py-8">
+<div class="w-24 h-24 flex items-center justify-center mb-6">
+<img src="https://static.readdy.ai/image/ebbd7f4a1445fee51fb68282682c4c06/0355dcf32e9deb9698cc265cba723c93.png" alt="MealMate Logo" class="w-full h-full object-contain">
+</div>
+<h1 class="text-3xl font-['Pacifico'] text-primary mb-2">MealMate</h1>
+<p class="text-gray-600 text-center mb-8">Your personal nutrition assistant</p>
+<div class="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+</div>
+<!-- Login Screen (Initially Hidden) -->
+<div id="login-screen" class="h-screen flex flex-col px-6 py-8 hidden">
+<div class="flex-1 flex flex-col items-center justify-center">
+<div class="w-20 h-20 flex items-center justify-center mb-6">
+<img src="https://static.readdy.ai/image/ebbd7f4a1445fee51fb68282682c4c06/0355dcf32e9deb9698cc265cba723c93.png" alt="MealMate Logo" class="w-full h-full object-contain">
+</div>
+<h1 class="text-2xl font-['Pacifico'] text-primary mb-2">MealMate</h1>
+<p class="text-gray-600 text-center mb-8">Personalized meal planning made easy</p>
+<div class="w-full space-y-4 mb-6">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<i class="ri-mail-line text-gray-400"></i>
+</div>
+<input type="email" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="Email">
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<i class="ri-lock-line text-gray-400"></i>
+</div>
+<input type="password" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="Password">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
+<i class="ri-eye-off-line text-gray-400"></i>
+</div>
+</div>
+<button class="w-full py-3 bg-primary text-white font-medium !rounded-button hover:bg-opacity-90 transition cursor-pointer">Log In</button>
+<div class="text-center">
+<a href="#" class="text-primary text-sm">Forgot password?</a>
+</div>
+</div>
+<div class="w-full">
+<div class="flex items-center mb-4">
+<div class="flex-1 h-px bg-gray-200"></div>
+<p class="px-3 text-gray-500 text-sm">or continue with</p>
+<div class="flex-1 h-px bg-gray-200"></div>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex items-center justify-center py-2.5 border border-gray-200 !rounded-button hover:bg-gray-50 cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-google-fill text-lg"></i>
+</div>
+</button>
+<button class="flex items-center justify-center py-2.5 border border-gray-200 !rounded-button hover:bg-gray-50 cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-apple-fill text-lg"></i>
+</div>
+</button>
+<button class="flex items-center justify-center py-2.5 border border-gray-200 !rounded-button hover:bg-gray-50 cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-facebook-fill text-lg"></i>
+</div>
+</button>
+</div>
+</div>
+</div>
+<div class="text-center mt-6">
+<p class="text-gray-600">Don't have an account? <a href="#" id="show-signup" class="text-primary font-medium">Sign up</a></p>
+</div>
+</div>
+<!-- Signup Screen (Initially Hidden) -->
+<div id="signup-screen" class="h-screen flex flex-col px-6 py-8 hidden">
+<div class="flex-1 flex flex-col items-center justify-center">
+<div class="w-20 h-20 flex items-center justify-center mb-6">
+<img src="https://static.readdy.ai/image/ebbd7f4a1445fee51fb68282682c4c06/0355dcf32e9deb9698cc265cba723c93.png" alt="MealMate Logo" class="w-full h-full object-contain">
+</div>
+<h1 class="text-2xl font-['Pacifico'] text-primary mb-2">MealMate</h1>
+<p class="text-gray-600 text-center mb-8">Create your account to get started</p>
+<div class="w-full space-y-4 mb-6">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<i class="ri-user-line text-gray-400"></i>
+</div>
+<input type="text" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="Full Name">
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<i class="ri-mail-line text-gray-400"></i>
+</div>
+<input type="email" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="Email">
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<i class="ri-lock-line text-gray-400"></i>
+</div>
+<input type="password" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="Password">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
+<i class="ri-eye-off-line text-gray-400"></i>
+</div>
+</div>
+<button class="w-full py-3 bg-primary text-white font-medium !rounded-button hover:bg-opacity-90 transition cursor-pointer">Sign Up</button>
+<div class="text-xs text-gray-500 text-center">
+By signing up, you agree to our <a href="#" class="text-primary">Terms</a> and <a href="#" class="text-primary">Privacy Policy</a>
+</div>
+</div>
+<div class="w-full">
+<div class="flex items-center mb-4">
+<div class="flex-1 h-px bg-gray-200"></div>
+<p class="px-3 text-gray-500 text-sm">or continue with</p>
+<div class="flex-1 h-px bg-gray-200"></div>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex items-center justify-center py-2.5 border border-gray-200 !rounded-button hover:bg-gray-50 cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-google-fill text-lg"></i>
+</div>
+</button>
+<button class="flex items-center justify-center py-2.5 border border-gray-200 !rounded-button hover:bg-gray-50 cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-apple-fill text-lg"></i>
+</div>
+</button>
+<button class="flex items-center justify-center py-2.5 border border-gray-200 !rounded-button hover:bg-gray-50 cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-facebook-fill text-lg"></i>
+</div>
+</button>
+</div>
+</div>
+</div>
+<div class="text-center mt-6">
+<p class="text-gray-600">Already have an account? <a href="#" id="show-login" class="text-primary font-medium">Log in</a></p>
+</div>
+</div>
+<!-- Onboarding Flow (Initially Hidden) -->
+<div id="onboarding-flow" class="h-screen flex flex-col hidden">
+<!-- Progress Bar -->
+<div class="fixed top-0 left-0 w-full h-1 bg-gray-100">
+<div id="progress-bar" class="h-full bg-primary" style="width: 25%"></div>
+</div>
+<!-- Step 1: Health Goals -->
+<div id="step-1" class="flex-1 flex flex-col px-6 pt-12 pb-8">
+<h2 class="text-2xl font-semibold mb-2">What's your goal?</h2>
+<p class="text-gray-600 mb-8">We'll customize your meal plan based on your goals</p>
+<div class="space-y-3 mb-auto">
+<div class="p-4 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-scales-line text-primary"></i>
+</div>
+<div>
+<h3 class="font-medium">Lose weight</h3>
+<p class="text-sm text-gray-500">Calorie deficit with balanced nutrition</p>
+</div>
+</div>
+</div>
+<div class="p-4 border border-primary !rounded-lg bg-green-50 cursor-pointer transition">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-primary !rounded-full mr-3">
+<i class="ri-heart-pulse-line text-white"></i>
+</div>
+<div>
+<h3 class="font-medium">Maintain health</h3>
+<p class="text-sm text-gray-500">Balanced nutrition for overall wellness</p>
+</div>
+</div>
+</div>
+<div class="p-4 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-boxing-line text-primary"></i>
+</div>
+<div>
+<h3 class="font-medium">Build muscle</h3>
+<p class="text-sm text-gray-500">Protein-rich meals with calorie surplus</p>
+</div>
+</div>
+</div>
+<div class="p-4 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-run-line text-primary"></i>
+</div>
+<div>
+<h3 class="font-medium">Improve fitness</h3>
+<p class="text-sm text-gray-500">Energy-focused nutrition for active lifestyle</p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex justify-between mt-8">
+<button class="text-gray-500 cursor-pointer">Skip</button>
+<button id="to-step-2" class="px-6 py-2.5 bg-primary text-white font-medium !rounded-button hover:bg-opacity-90 transition cursor-pointer">Next</button>
+</div>
+</div>
+<!-- Step 2: Dietary Preferences (Initially Hidden) -->
+<div id="step-2" class="flex-1 flex flex-col px-6 pt-12 pb-8 hidden">
+<h2 class="text-2xl font-semibold mb-2">Dietary preferences?</h2>
+<p class="text-gray-600 mb-8">Select any special diets you follow</p>
+<div class="grid grid-cols-2 gap-3 mb-auto">
+<div class="p-3 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex flex-col items-center text-center">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20vegetable%20salad%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=1&orientation=squarish" class="w-full h-full object-contain" alt="Vegetarian">
+</div>
+<h3 class="font-medium">Vegetarian</h3>
+</div>
+</div>
+<div class="p-3 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex flex-col items-center text-center">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20plant%20based%20food%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=2&orientation=squarish" class="w-full h-full object-contain" alt="Vegan">
+</div>
+<h3 class="font-medium">Vegan</h3>
+</div>
+</div>
+<div class="p-3 border border-primary !rounded-lg bg-green-50 cursor-pointer transition">
+<div class="flex flex-col items-center text-center">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20keto%20food%20with%20avocado%20and%20eggs%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=3&orientation=squarish" class="w-full h-full object-contain" alt="Keto">
+</div>
+<h3 class="font-medium">Keto</h3>
+</div>
+</div>
+<div class="p-3 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex flex-col items-center text-center">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20mediterranean%20food%20with%20olive%20oil%20and%20fish%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=4&orientation=squarish" class="w-full h-full object-contain" alt="Mediterranean">
+</div>
+<h3 class="font-medium">Mediterranean</h3>
+</div>
+</div>
+<div class="p-3 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex flex-col items-center text-center">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20wheat%20free%20bread%20and%20gluten%20free%20food%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=5&orientation=squarish" class="w-full h-full object-contain" alt="Gluten-Free">
+</div>
+<h3 class="font-medium">Gluten-Free</h3>
+</div>
+</div>
+<div class="p-3 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex flex-col items-center text-center">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20paleo%20diet%20with%20meat%20and%20vegetables%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=6&orientation=squarish" class="w-full h-full object-contain" alt="Paleo">
+</div>
+<h3 class="font-medium">Paleo</h3>
+</div>
+</div>
+</div>
+<div class="flex justify-between mt-8">
+<button id="back-to-step-1" class="text-gray-500 cursor-pointer">Back</button>
+<button id="to-step-3" class="px-6 py-2.5 bg-primary text-white font-medium !rounded-button hover:bg-opacity-90 transition cursor-pointer">Next</button>
+</div>
+</div>
+<!-- Step 3: Allergies (Initially Hidden) -->
+<div id="step-3" class="flex-1 flex flex-col px-6 pt-12 pb-8 hidden">
+<h2 class="text-2xl font-semibold mb-2">Any allergies?</h2>
+<p class="text-gray-600 mb-8">Select all that apply</p>
+<div class="space-y-3 mb-auto">
+<div class="p-4 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20peanuts%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=7&orientation=squarish" class="w-6 h-6 object-contain" alt="Peanuts">
+</div>
+<h3 class="font-medium">Peanuts</h3>
+</div>
+<div class="w-6 h-6 border border-gray-300 !rounded"></div>
+</div>
+</div>
+<div class="p-4 border border-primary !rounded-lg bg-green-50 cursor-pointer transition">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-primary !rounded-full mr-3">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20dairy%20milk%20and%20cheese%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=8&orientation=squarish" class="w-6 h-6 object-contain" alt="Dairy">
+</div>
+<h3 class="font-medium">Dairy</h3>
+</div>
+<div class="w-6 h-6 bg-primary !rounded flex items-center justify-center text-white">
+<i class="ri-check-line"></i>
+</div>
+</div>
+</div>
+<div class="p-4 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20eggs%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=9&orientation=squarish" class="w-6 h-6 object-contain" alt="Eggs">
+</div>
+<h3 class="font-medium">Eggs</h3>
+</div>
+<div class="w-6 h-6 border border-gray-300 !rounded"></div>
+</div>
+</div>
+<div class="p-4 border border-gray-200 !rounded-lg hover:border-primary cursor-pointer transition">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20shellfish%20and%20seafood%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=10&orientation=squarish" class="w-6 h-6 object-contain" alt="Shellfish">
+</div>
+<h3 class="font-medium">Shellfish</h3>
+</div>
+<div class="w-6 h-6 border border-gray-300 !rounded"></div>
+</div>
+</div>
+<div class="p-4 border border-primary !rounded-lg bg-green-50 cursor-pointer transition">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center bg-primary !rounded-full mr-3">
+<img src="https://readdy.ai/api/search-image?query=icon%2C%202.5D%20vector%20illustration%2C%20wheat%20and%20gluten%2C%20high-quality%20details%2C%20prominent%20main%20subject%2C%20clear%20and%20sharp%2C%20the%20icon%20should%20take%20up%2070%25%20of%20the%20frame%2C%20isolated%20on%20white%20background%2C%20centered%20composition%2C%20soft%20lighting%2C%20no%20shadows%2C%20no%20text%2C%20Content%20simple&width=100&height=100&seq=11&orientation=squarish" class="w-6 h-6 object-contain" alt="Gluten">
+</div>
+<h3 class="font-medium">Gluten</h3>
+</div>
+<div class="w-6 h-6 bg-primary !rounded flex items-center justify-center text-white">
+<i class="ri-check-line"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="flex justify-between mt-8">
+<button id="back-to-step-2" class="text-gray-500 cursor-pointer">Back</button>
+<button id="to-step-4" class="px-6 py-2.5 bg-primary text-white font-medium !rounded-button hover:bg-opacity-90 transition cursor-pointer">Next</button>
+</div>
+</div>
+<!-- Step 4: Meal Timing (Initially Hidden) -->
+<div id="step-4" class="flex-1 flex flex-col px-6 pt-12 pb-8 hidden">
+<h2 class="text-2xl font-semibold mb-2">When do you eat?</h2>
+<p class="text-gray-600 mb-8">Set your preferred meal times</p>
+<div class="space-y-5 mb-auto">
+<div>
+<div class="flex items-center justify-between mb-2">
+<label class="font-medium">Breakfast</label>
+<div class="flex items-center">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-time-line text-primary"></i>
+</div>
+<span class="text-primary ml-1">7:30 AM</span>
+</div>
+</div>
+<input type="range" min="5" max="11" value="7.5" step="0.5" class="w-full h-2 bg-gray-200 !rounded-full appearance-none cursor-pointer">
+<div class="flex justify-between text-xs text-gray-500 mt-1">
+<span>5:00</span>
+<span>8:00</span>
+<span>11:00</span>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-2">
+<label class="font-medium">Lunch</label>
+<div class="flex items-center">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-time-line text-primary"></i>
+</div>
+<span class="text-primary ml-1">12:30 PM</span>
+</div>
+</div>
+<input type="range" min="11" max="15" value="12.5" step="0.5" class="w-full h-2 bg-gray-200 !rounded-full appearance-none cursor-pointer">
+<div class="flex justify-between text-xs text-gray-500 mt-1">
+<span>11:00</span>
+<span>1:00</span>
+<span>3:00</span>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-2">
+<label class="font-medium">Dinner</label>
+<div class="flex items-center">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-time-line text-primary"></i>
+</div>
+<span class="text-primary ml-1">7:00 PM</span>
+</div>
+</div>
+<input type="range" min="17" max="22" value="19" step="0.5" class="w-full h-2 bg-gray-200 !rounded-full appearance-none cursor-pointer">
+<div class="flex justify-between text-xs text-gray-500 mt-1">
+<span>5:00</span>
+<span>7:00</span>
+<span>10:00</span>
+</div>
+</div>
+<div class="pt-4">
+<div class="flex items-center mb-4">
+<div class="relative inline-block w-10 mr-2 align-middle">
+<input type="checkbox" id="toggle-snacks" class="opacity-0 absolute h-0 w-0" checked>
+<label for="toggle-snacks" class="block overflow-hidden h-6 !rounded-full bg-gray-300 cursor-pointer"></label>
+</div>
+<label for="toggle-snacks" class="font-medium cursor-pointer">Include snacks</label>
+</div>
+<div>
+<div class="flex items-center justify-between mb-2">
+<label class="font-medium text-gray-600">Snack times</label>
+<div class="flex items-center">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-time-line text-primary"></i>
+</div>
+<span class="text-primary ml-1">10:00 AM, 3:30 PM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex justify-between mt-8">
+<button id="back-to-step-3" class="text-gray-500 cursor-pointer">Back</button>
+<button id="finish-onboarding" class="px-6 py-2.5 bg-primary text-white font-medium !rounded-button hover:bg-opacity-90 transition cursor-pointer">Finish</button>
+</div>
+</div>
+</div>
+<!-- Main Dashboard (Initially Hidden) -->
+<div id="dashboard" class="pt-16 pb-20 hidden">
+<!-- Top Navigation Bar -->
+<div class="fixed top-0 left-0 w-full bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between z-10">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center mr-2">
+<img src="https://static.readdy.ai/image/ebbd7f4a1445fee51fb68282682c4c06/0355dcf32e9deb9698cc265cba723c93.png" alt="MealMate Logo" class="w-full h-full object-contain">
+</div>
+<h1 class="text-xl font-['Pacifico'] text-primary">MealMate</h1>
+</div>
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center !rounded-full bg-green-50 cursor-pointer">
+<i class="ri-notification-3-line text-primary"></i>
+</div>
+</div>
+</div>
+<!-- Dashboard Content -->
+<div class="px-4">
+<!-- Greeting Section -->
+<div class="mb-6">
+<h2 class="text-2xl font-semibold">Hello, Raghu Datta!</h2>
+<p class="text-gray-600">Saturday, April 12, 2025</p>
+</div>
+<!-- Daily Overview Card -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-semibold">Today's Overview</h3>
+<button class="text-primary text-sm font-medium cursor-pointer">Details</button>
+</div>
+<div class="flex">
+<!-- Calorie Progress -->
+<div class="flex-1 flex flex-col items-center">
+<div class="relative w-20 h-20 mb-2">
+<svg viewBox="0 0 36 36" class="w-full h-full">
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E6E6E6" stroke-width="3" stroke-dasharray="100, 100"/>
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0B3B24" stroke-width="3" stroke-dasharray="65, 100"/>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-lg font-semibold">65%</span>
+<span class="text-xs text-gray-500">1,300/2,000</span>
+</div>
+</div>
+<span class="text-sm font-medium">Calories</span>
+</div>
+<!-- Water Intake -->
+<div class="flex-1 flex flex-col items-center">
+<div class="relative w-20 h-20 mb-2">
+<svg viewBox="0 0 36 36" class="w-full h-full">
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E6E6E6" stroke-width="3" stroke-dasharray="100, 100"/>
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#8FBC8F" stroke-width="3" stroke-dasharray="50, 100"/>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-lg font-semibold">4/8</span>
+<span class="text-xs text-gray-500">glasses</span>
+</div>
+</div>
+<span class="text-sm font-medium">Water</span>
+</div>
+<!-- Steps -->
+<div class="flex-1 flex flex-col items-center">
+<div class="relative w-20 h-20 mb-2">
+<svg viewBox="0 0 36 36" class="w-full h-full">
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E6E6E6" stroke-width="3" stroke-dasharray="100, 100"/>
+<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0B3B24" stroke-width="3" stroke-dasharray="35, 100"/>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-lg font-semibold">3.5k</span>
+<span class="text-xs text-gray-500">steps</span>
+</div>
+</div>
+<span class="text-sm font-medium">Activity</span>
+</div>
+</div>
+<!-- Macro Nutrients -->
+<div class="mt-4 pt-4 border-t border-gray-100">
+<h4 class="text-sm font-medium mb-3">Macro Nutrients</h4>
+<div class="space-y-2">
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span>Protein</span>
+<span>45g / 120g</span>
+</div>
+<div class="h-2 bg-gray-100 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 37.5%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span>Carbs</span>
+<span>120g / 200g</span>
+</div>
+<div class="h-2 bg-gray-100 !rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 60%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span>Fats</span>
+<span>30g / 65g</span>
+</div>
+<div class="h-2 bg-gray-100 !rounded-full overflow-hidden">
+<div class="h-full bg-yellow-500" style="width: 46%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Today's Meals -->
+<div class="mb-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-semibold">Today's Meals</h3>
+<button class="text-primary text-sm font-medium cursor-pointer">View All</button>
+</div>
+<div class="space-y-3">
+<!-- Breakfast Card -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-sun-line text-primary"></i>
+</div>
+<h4 class="font-medium">Breakfast</h4>
+</div>
+<span class="text-sm text-gray-500">7:30 AM</span>
+</div>
+<div class="flex">
+<div class="flex-1 pr-3">
+<h5 class="font-medium mb-1">Avocado Toast with Eggs</h5>
+<p class="text-sm text-gray-600 mb-2">Whole grain bread, avocado, eggs</p>
+<div class="flex items-center text-xs text-gray-500">
+<span class="mr-2">420 kcal</span>
+<span class="mr-2">•</span>
+<span>Protein: 18g</span>
+</div>
+</div>
+<div class="w-16 h-16 !rounded-lg overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20avocado%20toast%20with%20poached%20eggs%20on%20whole%20grain%20bread%2C%20top%20view%2C%20bright%20natural%20lighting%2C%20on%20white%20plate%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20breakfast%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=100&height=100&seq=12&orientation=squarish" class="w-full h-full object-cover" alt="Avocado Toast">
+</div>
+</div>
+<div class="flex mt-3 pt-3 border-t border-gray-100">
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-edit-line mr-1"></i>
+<span>Change</span>
+</button>
+<div class="w-px h-6 bg-gray-200"></div>
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-check-line mr-1"></i>
+<span>Log</span>
+</button>
+</div>
+</div>
+<!-- Lunch Card -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-sun-foggy-line text-primary"></i>
+</div>
+<h4 class="font-medium">Lunch</h4>
+</div>
+<span class="text-sm text-gray-500">12:30 PM</span>
+</div>
+<div class="flex">
+<div class="flex-1 pr-3">
+<h5 class="font-medium mb-1">Keto Bowl with Salmon</h5>
+<p class="text-sm text-gray-600 mb-2">Salmon, avocado, mixed greens, olive oil</p>
+<div class="flex items-center text-xs text-gray-500">
+<span class="mr-2">520 kcal</span>
+<span class="mr-2">•</span>
+<span>Protein: 32g</span>
+</div>
+</div>
+<div class="w-16 h-16 !rounded-lg overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20keto%20bowl%20with%20grilled%20salmon%2C%20avocado%2C%20mixed%20greens%2C%20olive%20oil%20dressing%2C%20top%20view%2C%20bright%20natural%20lighting%2C%20on%20white%20bowl%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20lunch%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=100&height=100&seq=13&orientation=squarish" class="w-full h-full object-cover" alt="Keto Bowl">
+</div>
+</div>
+<div class="flex mt-3 pt-3 border-t border-gray-100">
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-edit-line mr-1"></i>
+<span>Change</span>
+</button>
+<div class="w-px h-6 bg-gray-200"></div>
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-check-line mr-1"></i>
+<span>Log</span>
+</button>
+</div>
+</div>
+<!-- Dinner Card -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-moon-line text-primary"></i>
+</div>
+<h4 class="font-medium">Dinner</h4>
+</div>
+<span class="text-sm text-gray-500">7:00 PM</span>
+</div>
+<div class="flex items-center justify-center py-4">
+<button class="px-4 py-2 border border-dashed border-gray-300 !rounded-lg text-gray-500 hover:text-primary hover:border-primary transition cursor-pointer">
+<i class="ri-add-line mr-1"></i>
+<span>Add dinner</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommended Recipes -->
+<div class="mb-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-semibold">Recommended for You</h3>
+<button class="text-primary text-sm font-medium cursor-pointer">See All</button>
+</div>
+<div class="flex overflow-x-auto -mx-4 px-4 pb-4 space-x-3 hide-scrollbar">
+<!-- Recipe Card 1 -->
+<div class="w-40 flex-shrink-0">
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="h-32 overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20grilled%20chicken%20with%20vegetables%2C%20bright%20natural%20lighting%2C%20on%20white%20plate%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20dinner%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=160&height=128&seq=14&orientation=landscape" class="w-full h-full object-cover" alt="Grilled Chicken">
+</div>
+<div class="p-3">
+<div class="flex items-center mb-1">
+<span class="text-xs font-medium px-1.5 py-0.5 bg-green-50 text-primary !rounded-full">Dinner</span>
+</div>
+<h5 class="font-medium text-sm mb-1">Grilled Chicken & Veggies</h5>
+<div class="flex items-center text-xs text-gray-500">
+<span>430 kcal</span>
+<span class="mx-1">•</span>
+<span>30 min</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recipe Card 2 -->
+<div class="w-40 flex-shrink-0">
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="h-32 overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20protein%20smoothie%20bowl%20with%20berries%20and%20nuts%2C%20bright%20natural%20lighting%2C%20in%20white%20bowl%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20breakfast%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=160&height=128&seq=15&orientation=landscape" class="w-full h-full object-cover" alt="Protein Smoothie Bowl">
+</div>
+<div class="p-3">
+<div class="flex items-center mb-1">
+<span class="text-xs font-medium px-1.5 py-0.5 bg-green-50 text-primary !rounded-full">Breakfast</span>
+</div>
+<h5 class="font-medium text-sm mb-1">Protein Smoothie Bowl</h5>
+<div class="flex items-center text-xs text-gray-500">
+<span>320 kcal</span>
+<span class="mx-1">•</span>
+<span>10 min</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recipe Card 3 -->
+<div class="w-40 flex-shrink-0">
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="h-32 overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20keto%20cauliflower%20mac%20and%20cheese%2C%20bright%20natural%20lighting%2C%20in%20white%20bowl%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20lunch%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=160&height=128&seq=16&orientation=landscape" class="w-full h-full object-cover" alt="Cauliflower Mac & Cheese">
+</div>
+<div class="p-3">
+<div class="flex items-center mb-1">
+<span class="text-xs font-medium px-1.5 py-0.5 bg-green-50 text-primary !rounded-full">Lunch</span>
+</div>
+<h5 class="font-medium text-sm mb-1">Cauliflower Mac & Cheese</h5>
+<div class="flex items-center text-xs text-gray-500">
+<span>380 kcal</span>
+<span class="mx-1">•</span>
+<span>25 min</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Tab Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 grid grid-cols-4 z-10">
+<button class="flex flex-col items-center justify-center py-2 text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-home-5-fill"></i>
+</div>
+<span class="text-xs mt-1">Home</span>
+</button>
+<button id="show-meal-plan" class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-calendar-line"></i>
+</div>
+<span class="text-xs mt-1">Meal Plan</span>
+</button>
+<button id="show-grocery" class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center" onclick="document.getElementById('show-grocery').click()">
+<i class="ri-shopping-basket-line"></i>
+</div>
+<span class="text-xs mt-1">Grocery</span>
+</button>
+<button id="show-profile" class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-user-line"></i>
+</div>
+<span class="text-xs mt-1">Profile</span>
+</button>
+</div>
+</div>
+<!-- Meal Plan Screen (Initially Hidden) -->
+<div id="meal-plan" class="pt-16 pb-20 hidden">
+<!-- Top Navigation Bar -->
+<div class="fixed top-0 left-0 w-full bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between z-10">
+<h1 class="text-lg font-semibold">Meal Plan</h1>
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center !rounded-full bg-green-50 cursor-pointer">
+<i class="ri-search-line text-primary"></i>
+</div>
+</div>
+</div>
+<!-- Meal Plan Content -->
+<div class="px-4">
+<!-- Date Selector -->
+<div class="mb-6">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center">
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 cursor-pointer">
+<i class="ri-arrow-left-s-line"></i>
+</button>
+<h2 class="font-semibold">April 2025</h2>
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 cursor-pointer">
+<i class="ri-arrow-right-s-line"></i>
+</button>
+</div>
+<div class="flex">
+<button class="px-3 py-1 text-sm font-medium bg-primary text-white !rounded-l-full">Week</button>
+<button class="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-500 !rounded-r-full">Month</button>
+</div>
+</div>
+<div class="flex overflow-x-auto -mx-4 px-4 pb-2 space-x-3 hide-scrollbar">
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Sun</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">7</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Mon</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">8</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Tue</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">9</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Wed</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">10</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Thu</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">11</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Fri</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">11</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Sat</span>
+<button class="w-10 h-10 flex items-center justify-center text-white bg-primary !rounded-full cursor-pointer">12</button>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-xs text-gray-500 mb-1">Sun</span>
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 !rounded-full cursor-pointer">13</button>
+</div>
+</div>
+</div>
+<!-- Meal Plan for the Day -->
+<div class="mb-6">
+<h3 class="font-semibold mb-4">Saturday, April 12</h3>
+<div class="space-y-4">
+<!-- Breakfast Plan -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-sun-line text-primary"></i>
+</div>
+<h4 class="font-medium">Breakfast</h4>
+</div>
+<span class="text-sm text-gray-500">7:30 AM</span>
+</div>
+<div class="flex">
+<div class="flex-1 pr-3">
+<h5 class="font-medium mb-1">Avocado Toast with Eggs</h5>
+<p class="text-sm text-gray-600 mb-2">Whole grain bread, avocado, eggs</p>
+<div class="flex items-center text-xs text-gray-500">
+<span class="mr-2">420 kcal</span>
+<span class="mr-2">•</span>
+<span>Protein: 18g</span>
+</div>
+</div>
+<div class="w-16 h-16 !rounded-lg overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20avocado%20toast%20with%20poached%20eggs%20on%20whole%20grain%20bread%2C%20top%20view%2C%20bright%20natural%20lighting%2C%20on%20white%20plate%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20breakfast%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=100&height=100&seq=17&orientation=squarish" class="w-full h-full object-cover" alt="Avocado Toast">
+</div>
+</div>
+<div class="flex mt-3 pt-3 border-t border-gray-100">
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-edit-line mr-1"></i>
+<span>Edit</span>
+</button>
+<div class="w-px h-6 bg-gray-200"></div>
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-gray-500 font-medium cursor-pointer">
+<i class="ri-delete-bin-line mr-1"></i>
+<span>Remove</span>
+</button>
+</div>
+</div>
+<!-- Lunch Plan -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-sun-foggy-line text-primary"></i>
+</div>
+<h4 class="font-medium">Lunch</h4>
+</div>
+<span class="text-sm text-gray-500">12:30 PM</span>
+</div>
+<div class="flex">
+<div class="flex-1 pr-3">
+<h5 class="font-medium mb-1">Keto Bowl with Salmon</h5>
+<p class="text-sm text-gray-600 mb-2">Salmon, avocado, mixed greens, olive oil</p>
+<div class="flex items-center text-xs text-gray-500">
+<span class="mr-2">520 kcal</span>
+<span class="mr-2">•</span>
+<span>Protein: 32g</span>
+</div>
+</div>
+<div class="w-16 h-16 !rounded-lg overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20keto%20bowl%20with%20grilled%20salmon%2C%20avocado%2C%20mixed%20greens%2C%20olive%20oil%20dressing%2C%20top%20view%2C%20bright%20natural%20lighting%2C%20on%20white%20bowl%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20lunch%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=100&height=100&seq=18&orientation=squarish" class="w-full h-full object-cover" alt="Keto Bowl">
+</div>
+</div>
+<div class="flex mt-3 pt-3 border-t border-gray-100">
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-edit-line mr-1"></i>
+<span>Edit</span>
+</button>
+<div class="w-px h-6 bg-gray-200"></div>
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-gray-500 font-medium cursor-pointer">
+<i class="ri-delete-bin-line mr-1"></i>
+<span>Remove</span>
+</button>
+</div>
+</div>
+<!-- Snack Plan -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-cup-line text-primary"></i>
+</div>
+<h4 class="font-medium">Snack</h4>
+</div>
+<span class="text-sm text-gray-500">3:30 PM</span>
+</div>
+<div class="flex">
+<div class="flex-1 pr-3">
+<h5 class="font-medium mb-1">Greek Yogurt with Berries</h5>
+<p class="text-sm text-gray-600 mb-2">Greek yogurt, mixed berries, honey</p>
+<div class="flex items-center text-xs text-gray-500">
+<span class="mr-2">180 kcal</span>
+<span class="mr-2">•</span>
+<span>Protein: 15g</span>
+</div>
+</div>
+<div class="w-16 h-16 !rounded-lg overflow-hidden">
+<img src="https://readdy.ai/api/search-image?query=Realistic%20food%20photography%20of%20greek%20yogurt%20with%20fresh%20mixed%20berries%20and%20honey%2C%20top%20view%2C%20bright%20natural%20lighting%2C%20in%20white%20bowl%2C%20fresh%20ingredients%2C%20high%20resolution%2C%20professional%20food%20styling%2C%20nutritious%20snack%2C%20vibrant%20colors%2C%20appetizing%20presentation&width=100&height=100&seq=19&orientation=squarish" class="w-full h-full object-cover" alt="Greek Yogurt">
+</div>
+</div>
+<div class="flex mt-3 pt-3 border-t border-gray-100">
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-primary font-medium cursor-pointer">
+<i class="ri-edit-line mr-1"></i>
+<span>Edit</span>
+</button>
+<div class="w-px h-6 bg-gray-200"></div>
+<button class="flex-1 flex items-center justify-center py-1 text-sm text-gray-500 font-medium cursor-pointer">
+<i class="ri-delete-bin-line mr-1"></i>
+<span>Remove</span>
+</button>
+</div>
+</div>
+<!-- Dinner Plan -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-moon-line text-primary"></i>
+</div>
+<h4 class="font-medium">Dinner</h4>
+</div>
+<span class="text-sm text-gray-500">7:00 PM</span>
+</div>
+<div class="flex items-center justify-center py-4">
+<button class="px-4 py-2 border border-dashed border-gray-300 !rounded-lg text-gray-500 hover:text-primary hover:border-primary transition cursor-pointer">
+<i class="ri-add-line mr-1"></i>
+<span>Add dinner</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Meal Button -->
+<div class="fixed bottom-20 right-4">
+<button class="w-14 h-14 flex items-center justify-center bg-primary text-white !rounded-full shadow-lg cursor-pointer">
+<i class="ri-add-line text-xl"></i>
+</button>
+</div>
+</div>
+<!-- Bottom Tab Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 grid grid-cols-4 z-10">
+<button id="back-to-dashboard" class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-home-5-fill"></i>
+</div>
+<span class="text-xs mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-calendar-fill"></i>
+</div>
+<span class="text-xs mt-1">Meal Plan</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center" onclick="document.getElementById('show-grocery').click()">
+<i class="ri-shopping-basket-line"></i>
+</div>
+<span class="text-xs mt-1">Grocery</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-user-line"></i>
+</div>
+<span class="text-xs mt-1">Profile</span>
+</button>
+</div>
+</div>
+<!-- Grocery List Screen (Initially Hidden) -->
+<div id="grocery-list" class="pt-16 pb-20 hidden">
+<!-- Top Navigation Bar -->
+<div class="fixed top-0 left-0 w-full bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between z-10">
+<h1 class="text-lg font-semibold">Grocery List</h1>
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center !rounded-full bg-green-50 cursor-pointer mr-2">
+<i class="ri-share-line text-primary"></i>
+</div>
+<div class="w-10 h-10 flex items-center justify-center !rounded-full bg-green-50 cursor-pointer">
+<i class="ri-more-2-fill text-primary"></i>
+</div>
+</div>
+</div>
+<!-- Grocery List Content -->
+<div class="px-4">
+<!-- Summary Bar -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-medium">This Week's List</h3>
+<span class="text-sm text-gray-500">April 12 - 18</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-shopping-basket-2-line text-primary"></i>
+</div>
+<div>
+<p class="text-sm text-gray-600">Items needed</p>
+<p class="font-medium">24 items</p>
+</div>
+</div>
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-check-double-line text-primary"></i>
+</div>
+<div>
+<p class="text-sm text-gray-600">Purchased</p>
+<p class="font-medium">8 items</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="relative mb-6">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<i class="ri-search-line text-gray-400"></i>
+</div>
+<input type="text" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="Search items">
+<button class="absolute inset-y-0 right-0 flex items-center pr-3 text-primary cursor-pointer">
+<i class="ri-add-line"></i>
+</button>
+</div>
+<!-- Grocery Categories -->
+<div class="mb-6">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center">
+<h3 class="font-semibold">Shopping List</h3>
+<div class="ml-2 px-2 py-0.5 bg-green-50 !rounded-full">
+<span class="text-xs text-primary">Auto-generated</span>
+</div>
+</div>
+<button class="flex items-center text-primary text-sm font-medium">
+<i class="ri-refresh-line mr-1"></i>
+<span>Update</span>
+</button>
+</div>
+<!-- Filter Tabs -->
+<div class="flex space-x-2 mb-4 overflow-x-auto hide-scrollbar">
+<button class="px-3 py-1.5 bg-primary text-white text-sm font-medium !rounded-full whitespace-nowrap">All Items</button>
+<button class="px-3 py-1.5 bg-gray-100 text-gray-500 text-sm font-medium !rounded-full whitespace-nowrap">To Buy</button>
+<button class="px-3 py-1.5 bg-gray-100 text-gray-500 text-sm font-medium !rounded-full whitespace-nowrap">Purchased</button>
+</div>
+<!-- Produce Section -->
+<div class="mb-4">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-2">
+<i class="ri-plant-line text-green-600"></i>
+</div>
+<h4 class="font-medium">Produce</h4>
+</div>
+<span class="text-sm text-gray-500">6 items</span>
+</div>
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 space-y-3">
+<div class="flex items-center">
+<input type="checkbox" id="avocado" class="w-5 h-5 !rounded cursor-pointer">
+<label for="avocado" class="ml-3 cursor-pointer">Avocado <span class="text-gray-500 text-sm">× 3</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="spinach" class="w-5 h-5 !rounded cursor-pointer" checked>
+<label for="spinach" class="ml-3 cursor-pointer line-through text-gray-400">Spinach <span class="text-gray-400 text-sm">× 1 bunch</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="berries" class="w-5 h-5 !rounded cursor-pointer">
+<label for="berries" class="ml-3 cursor-pointer">Mixed berries <span class="text-gray-500 text-sm">× 2 cups</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="lemon" class="w-5 h-5 !rounded cursor-pointer">
+<label for="lemon" class="ml-3 cursor-pointer">Lemon <span class="text-gray-500 text-sm">× 2</span></label>
+</div>
+</div>
+</div>
+<!-- Protein Section -->
+<div class="mb-4">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-red-50 !rounded-full mr-2">
+<i class="ri-meat-line text-red-600"></i>
+</div>
+<h4 class="font-medium">Protein</h4>
+</div>
+<span class="text-sm text-gray-500">3 items</span>
+</div>
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 space-y-3">
+<div class="flex items-center">
+<input type="checkbox" id="salmon" class="w-5 h-5 !rounded cursor-pointer" checked>
+<label for="salmon" class="ml-3 cursor-pointer line-through text-gray-400">Salmon <span class="text-gray-400 text-sm">× 1 lb</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="eggs" class="w-5 h-5 !rounded cursor-pointer">
+<label for="eggs" class="ml-3 cursor-pointer">Eggs <span class="text-gray-500 text-sm">× 12</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="yogurt" class="w-5 h-5 !rounded cursor-pointer">
+<label for="yogurt" class="ml-3 cursor-pointer">Greek yogurt <span class="text-gray-500 text-sm">× 32 oz</span></label>
+</div>
+</div>
+</div>
+<!-- Grains Section -->
+<div class="mb-4">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-yellow-50 !rounded-full mr-2">
+<i class="ri-seedling-line text-yellow-600"></i>
+</div>
+<h4 class="font-medium">Grains</h4>
+</div>
+<span class="text-sm text-gray-500">2 items</span>
+</div>
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 space-y-3">
+<div class="flex items-center">
+<input type="checkbox" id="bread" class="w-5 h-5 !rounded cursor-pointer">
+<label for="bread" class="ml-3 cursor-pointer">Whole grain bread <span class="text-gray-500 text-sm">× 1 loaf</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="quinoa" class="w-5 h-5 !rounded cursor-pointer" checked>
+<label for="quinoa" class="ml-3 cursor-pointer line-through text-gray-400">Quinoa <span class="text-gray-400 text-sm">× 1 cup</span></label>
+</div>
+</div>
+</div>
+<!-- Oils & Condiments Section -->
+<div>
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-yellow-50 !rounded-full mr-2">
+<i class="ri-oil-line text-yellow-500"></i>
+</div>
+<h4 class="font-medium">Oils & Condiments</h4>
+</div>
+<span class="text-sm text-gray-500">2 items</span>
+</div>
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 space-y-3">
+<div class="flex items-center">
+<input type="checkbox" id="olive-oil" class="w-5 h-5 !rounded cursor-pointer" checked>
+<label for="olive-oil" class="ml-3 cursor-pointer line-through text-gray-400">Olive oil <span class="text-gray-400 text-sm">× 1 bottle</span></label>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="honey" class="w-5 h-5 !rounded cursor-pointer">
+<label for="honey" class="ml-3 cursor-pointer">Honey <span class="text-gray-500 text-sm">× 1 jar</span></label>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Item Button -->
+<div class="fixed bottom-20 right-4">
+<button class="w-14 h-14 flex items-center justify-center bg-primary text-white !rounded-full shadow-lg cursor-pointer">
+<i class="ri-add-line text-xl"></i>
+</button>
+</div>
+</div>
+<!-- Bottom Tab Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 grid grid-cols-4 z-10">
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-home-5-fill"></i>
+</div>
+<span class="text-xs mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-calendar-line"></i>
+</div>
+<span class="text-xs mt-1">Meal Plan</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-shopping-basket-fill"></i>
+</div>
+<span class="text-xs mt-1">Grocery</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-user-line"></i>
+</div>
+<span class="text-xs mt-1">Profile</span>
+</button>
+</div>
+</div>
+<!-- Profile Screen (Initially Hidden) -->
+<div id="profile" class="pt-16 pb-20 hidden">
+<!-- Top Navigation Bar -->
+<div class="fixed top-0 left-0 w-full bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between z-10">
+<h1 class="text-lg font-semibold">Profile</h1>
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center !rounded-full bg-green-50 cursor-pointer">
+<i class="ri-settings-4-line text-primary"></i>
+</div>
+</div>
+</div>
+<!-- Profile Content -->
+<div class="px-4">
+<!-- Profile Header -->
+<div class="flex items-center mb-6">
+<div class="w-20 h-20 !rounded-full bg-green-50 flex items-center justify-center mr-4 overflow-hidden">
+<img src="https://static.readdy.ai/image/ebbd7f4a1445fee51fb68282682c4c06/4080a0724d29fc7eae290693daf32df9.png" class="w-full h-full object-cover" alt="Profile">
+</div>
+<div>
+<h2 class="text-xl font-semibold">Raghu Datta</h2>
+<p class="text-gray-600">raghu13@example.com</p>
+<button class="mt-1 text-sm text-primary font-medium cursor-pointer">Edit Profile</button>
+</div>
+</div>
+<!-- Stats Summary -->
+<div class="grid grid-cols-3 gap-3 mb-6">
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 text-center">
+<h3 class="text-xl font-semibold text-primary">12</h3>
+<p class="text-xs text-gray-500">Days Streak</p>
+</div>
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 text-center">
+<h3 class="text-xl font-semibold text-primary">85%</h3>
+<p class="text-xs text-gray-500">Plan Adherence</p>
+</div>
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-3 text-center">
+<h3 class="text-xl font-semibold text-primary">-3.2</h3>
+<p class="text-xs text-gray-500">lbs This Month</p>
+</div>
+</div>
+<!-- My Goals -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-semibold">My Goals</h3>
+<button class="text-primary text-sm font-medium cursor-pointer">Edit</button>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span>Weight Goal</span>
+<span class="text-primary">142 lbs (current: 145.2 lbs)</span>
+</div>
+<div class="h-2 bg-gray-100 !rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 60%"></div>
+</div>
+</div>
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-heart-pulse-line text-primary"></i>
+</div>
+<div>
+<h4 class="font-medium">Maintain health</h4>
+<p class="text-sm text-gray-500">Balanced nutrition for overall wellness</p>
+</div>
+</div>
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-run-line text-primary"></i>
+</div>
+<div>
+<h4 class="font-medium">Exercise 3-4 times per week</h4>
+<p class="text-sm text-gray-500">Moderate intensity cardio and strength</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Dietary Preferences -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-semibold">Dietary Preferences</h3>
+<button class="text-primary text-sm font-medium cursor-pointer">Edit</button>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-green-50 text-primary text-sm !rounded-full">Keto</span>
+<span class="px-3 py-1 bg-red-50 text-red-600 text-sm !rounded-full">Dairy-free</span>
+<span class="px-3 py-1 bg-yellow-50 text-yellow-600 text-sm !rounded-full">Gluten-free</span>
+</div>
+<div class="mt-4 pt-4 border-t border-gray-100">
+<h4 class="text-sm font-medium mb-2">Allergies & Restrictions</h4>
+<div class="space-y-2">
+<div class="flex items-center">
+<div class="w-6 h-6 flex items-center justify-center text-red-500 mr-2">
+<i class="ri-close-circle-line"></i>
+</div>
+<span>Dairy</span>
+</div>
+<div class="flex items-center">
+<div class="w-6 h-6 flex items-center justify-center text-red-500 mr-2">
+<i class="ri-close-circle-line"></i>
+</div>
+<span>Gluten</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Account Settings -->
+<div class="bg-white !rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+<h3 class="font-semibold mb-4">Account Settings</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-notification-4-line text-primary"></i>
+</div>
+<span>Notifications</span>
+</div>
+<button class="text-primary text-sm font-medium cursor-pointer">Manage</button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-lock-line text-primary"></i>
+</div>
+<span>Privacy</span>
+</div>
+<button class="text-primary text-sm font-medium cursor-pointer">Manage</button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-green-50 !rounded-full mr-3">
+<i class="ri-question-line text-primary"></i>
+</div>
+<span>Help & Support</span>
+</div>
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-arrow-right-s-line text-gray-400"></i>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center bg-red-50 !rounded-full mr-3">
+<i class="ri-logout-box-line text-red-500"></i>
+</div>
+<span>Log Out</span>
+</div>
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-arrow-right-s-line text-gray-400"></i>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Tab Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 grid grid-cols-4 z-10">
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-home-5-fill"></i>
+</div>
+<span class="text-xs mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-calendar-line"></i>
+</div>
+<span class="text-xs mt-1">Meal Plan</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-gray-400 hover:text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center" onclick="document.getElementById('show-grocery').click()">
+<i class="ri-shopping-basket-line"></i>
+</div>
+<span class="text-xs mt-1">Grocery</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-user-fill"></i>
+</div>
+<span class="text-xs mt-1">Profile</span>
+</button>
+</div>
+</div>
+<script>
+// Utility function for showing notifications
+function showNotification(message, type = 'success') {
+const notification = document.createElement('div');
+notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+notification.textContent = message;
+document.body.appendChild(notification);
+setTimeout(() => notification.remove(), 3000);
+}
+// Utility function for showing modal dialogs
+function showModal(title, content) {
+const modal = document.createElement('div');
+modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+modal.innerHTML = `
+<div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+<h3 class="text-lg font-semibold mb-4">${title}</h3>
+<div class="mb-6">${content}</div>
+<button class="w-full py-2 bg-primary text-white rounded-button" onclick="this.closest('.fixed').remove()">Close</button>
+</div>
+`;
+document.body.appendChild(modal);
+}
+document.addEventListener('DOMContentLoaded', function() {
+// Initialize all interactive elements
+function initializeInteractiveElements() {
+// Meal selection
+document.querySelectorAll('.meal-item').forEach(item => {
+item.addEventListener('click', function() {
+this.classList.toggle('selected');
+const checkbox = this.querySelector('input[type="checkbox"]');
+if (checkbox) {
+checkbox.checked = !checkbox.checked;
+}
+});
+});
+// Custom checkboxes
+document.querySelectorAll('.checkbox-custom').forEach(checkbox => {
+checkbox.addEventListener('change', function() {
+const label = this.closest('label');
+if (this.checked) {
+label.classList.add('text-gray-400');
+label.querySelector('span').classList.add('line-through');
+} else {
+label.classList.remove('text-gray-400');
+label.querySelector('span').classList.remove('line-through');
+}
+});
+});
+// Range sliders
+document.querySelectorAll('.range-slider').forEach(slider => {
+slider.addEventListener('input', function() {
+const value = this.value;
+const timeDisplay = this.closest('.slider-container').querySelector('.time-display');
+if (timeDisplay) {
+const hours = Math.floor(value);
+const minutes = Math.round((value % 1) * 60);
+const period = hours >= 12 ? 'PM' : 'AM';
+const displayHours = hours > 12 ? hours - 12 : hours;
+timeDisplay.textContent = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+});
+});
+// Toggle switches
+document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+toggle.addEventListener('change', function() {
+const container = this.closest('.toggle-container');
+const status = container.querySelector('.toggle-status');
+if (status) {
+status.textContent = this.checked ? 'On' : 'Off';
+}
+});
+});
+}
+// Initialize on page load
+initializeInteractiveElements();
+// Splash screen and initial login
+setTimeout(function() {
+document.getElementById('onboarding-screen').classList.add('hidden');
+document.getElementById('login-screen').classList.remove('hidden');
+}, 2000);
+// Login/Signup Toggle
+document.getElementById('show-signup').addEventListener('click', function(e) {
+e.preventDefault();
+document.getElementById('login-screen').classList.add('hidden');
+document.getElementById('signup-screen').classList.remove('hidden');
+});
+document.getElementById('show-login').addEventListener('click', function(e) {
+e.preventDefault();
+document.getElementById('signup-screen').classList.add('hidden');
+document.getElementById('login-screen').classList.remove('hidden');
+});
+// Password visibility toggle
+document.querySelectorAll('.ri-eye-off-line').forEach(icon => {
+icon.addEventListener('click', function() {
+const input = this.parentElement.previousElementSibling;
+if (input.type === 'password') {
+input.type = 'text';
+this.className = 'ri-eye-line text-gray-400';
+} else {
+input.type = 'password';
+this.className = 'ri-eye-off-line text-gray-400';
+}
+});
+});
+// Login/Signup Form Submission
+const loginButtons = document.querySelectorAll('#login-screen button.bg-primary, #signup-screen button.bg-primary');
+loginButtons.forEach(button => {
+button.addEventListener('click', function(e) {
+e.preventDefault();
+const form = this.closest('div');
+const email = form.querySelector('input[type="email"]').value;
+const password = form.querySelector('input[type="password"]').value;
+if (!email || !password) {
+showNotification('Please fill in all fields', 'error');
+return;
+}
+document.getElementById('login-screen').classList.add('hidden');
+document.getElementById('signup-screen').classList.add('hidden');
+document.getElementById('onboarding-flow').classList.remove('hidden');
+document.getElementById('step-1').classList.remove('hidden');
+});
+});
+// Social Login Buttons
+document.querySelectorAll('.grid-cols-3 button').forEach(button => {
+button.addEventListener('click', function() {
+showNotification('Social login coming soon!');
+});
+});
+// Onboarding Flow Navigation
+const onboardingSteps = {
+'to-step-2': { hide: 'step-1', show: 'step-2', progress: '50%' },
+'back-to-step-1': { hide: 'step-2', show: 'step-1', progress: '25%' },
+'to-step-3': { hide: 'step-2', show: 'step-3', progress: '75%' },
+'back-to-step-2': { hide: 'step-3', show: 'step-2', progress: '50%' },
+'to-step-4': { hide: 'step-3', show: 'step-4', progress: '100%' },
+'back-to-step-3': { hide: 'step-4', show: 'step-3', progress: '75%' }
+};
+Object.entries(onboardingSteps).forEach(([id, { hide, show, progress }]) => {
+document.getElementById(id).addEventListener('click', function() {
+document.getElementById(hide).classList.add('hidden');
+document.getElementById(show).classList.remove('hidden');
+document.getElementById('progress-bar').style.width = progress;
+});
+});
+// Onboarding Selection Handlers
+document.querySelectorAll('#step-1 .border').forEach(goal => {
+goal.addEventListener('click', function() {
+document.querySelectorAll('#step-1 .border').forEach(g => {
+g.classList.remove('border-primary', 'bg-green-50');
+g.querySelector('.w-10').classList.remove('bg-primary');
+g.querySelector('i').classList.remove('text-white');
+});
+this.classList.add('border-primary', 'bg-green-50');
+this.querySelector('.w-10').classList.add('bg-primary');
+this.querySelector('i').classList.add('text-white');
+});
+});
+document.querySelectorAll('#step-2 .border').forEach(diet => {
+diet.addEventListener('click', function() {
+this.classList.toggle('border-primary');
+this.classList.toggle('bg-green-50');
+});
+});
+document.querySelectorAll('#step-3 .border').forEach(allergy => {
+allergy.addEventListener('click', function() {
+this.classList.toggle('border-primary');
+this.classList.toggle('bg-green-50');
+const checkbox = this.querySelector('.w-6.h-6');
+if (checkbox.classList.contains('bg-primary')) {
+checkbox.classList.remove('bg-primary');
+checkbox.innerHTML = '';
+} else {
+checkbox.classList.add('bg-primary');
+checkbox.innerHTML = '<i class="ri-check-line text-white"></i>';
+}
+});
+});
+// Meal Time Range Inputs
+document.querySelectorAll('input[type="range"]').forEach(range => {
+range.addEventListener('input', function() {
+const timeDisplay = this.parentElement.querySelector('.text-primary');
+const value = parseFloat(this.value);
+const hours = Math.floor(value);
+const minutes = (value % 1) * 60;
+const period = hours >= 12 ? 'PM' : 'AM';
+const displayHours = hours > 12 ? hours - 12 : hours;
+timeDisplay.textContent = `${displayHours}:${minutes === 0 ? '00' : minutes} ${period}`;
+});
+});
+// Snacks Toggle
+document.getElementById('toggle-snacks').addEventListener('change', function() {
+const snackTimes = this.closest('.pt-4').querySelector('.text-primary');
+snackTimes.textContent = this.checked ? '10:00 AM, 3:30 PM' : 'No snacks';
+});
+// Complete Onboarding
+document.getElementById('finish-onboarding').addEventListener('click', function() {
+document.getElementById('onboarding-flow').classList.add('hidden');
+document.getElementById('dashboard').classList.remove('hidden');
+showNotification('Welcome to MealMate!');
+});
+// Dashboard Functionality
+// Notification Button
+document.querySelector('.ri-notification-3-line').parentElement.addEventListener('click', function() {
+showModal('Notifications', '<p>No new notifications</p>');
+});
+// Meal Logging
+document.querySelectorAll('button:has(.ri-check-line)').forEach(button => {
+button.addEventListener('click', function() {
+showNotification('Meal logged successfully!');
+});
+});
+// Meal Change
+document.querySelectorAll('button:has(.ri-edit-line)').forEach(button => {
+button.addEventListener('click', function() {
+showModal('Change Meal', `
+<div class="space-y-4">
+<input type="text" placeholder="Search meals..." class="w-full p-2 border rounded">
+<div class="space-y-2">
+<div class="p-2 border rounded cursor-pointer hover:bg-gray-50">Chicken Salad</div>
+<div class="p-2 border rounded cursor-pointer hover:bg-gray-50">Quinoa Bowl</div>
+<div class="p-2 border rounded cursor-pointer hover:bg-gray-50">Salmon Steak</div>
+</div>
+</div>
+`);
+});
+});
+// Add Meal Buttons
+document.querySelectorAll('button:has(.ri-add-line)').forEach(button => {
+button.addEventListener('click', function() {
+showModal('Add Meal', `
+<div class="space-y-4">
+<input type="text" placeholder="Search meals..." class="w-full p-2 border rounded">
+<div class="space-y-2">
+<div class="p-2 border rounded cursor-pointer hover:bg-gray-50">Grilled Chicken</div>
+<div class="p-2 border rounded cursor-pointer hover:bg-gray-50">Quinoa Bowl</div>
+<div class="p-2 border rounded cursor-pointer hover:bg-gray-50">Salmon Steak</div>
+</div>
+</div>
+`);
+});
+});
+// Navigation between main screens
+function navigateToScreen(targetScreen) {
+const allScreens = ['dashboard', 'meal-plan', 'grocery-list', 'profile'];
+allScreens.forEach(screen => {
+const element = document.getElementById(screen);
+if (element) {
+if (screen === targetScreen) {
+element.classList.remove('hidden');
+updateBottomNavigation(screen);
+} else {
+element.classList.add('hidden');
+}
+}
+});
+}
+// Add click handlers for all bottom navigation buttons
+document.querySelectorAll('.fixed.bottom-0').forEach(navbar => {
+const buttons = navbar.querySelectorAll('button');
+buttons.forEach((button, index) => {
+button.addEventListener('click', function() {
+const screens = ['dashboard', 'meal-plan', 'grocery-list', 'profile'];
+navigateToScreen(screens[index]);
+});
+});
+});
+// Function to update bottom navigation state
+function updateBottomNavigation(activeScreen) {
+const allScreens = ['dashboard', 'meal-plan', 'grocery-list', 'profile'];
+const iconMap = {
+'dashboard': 'home-5',
+'meal-plan': 'calendar',
+'grocery-list': 'shopping-basket',
+'profile': 'user'
+};
+allScreens.forEach((screen, index) => {
+const navBar = document.querySelector(`#${screen} .fixed.bottom-0`);
+if (navBar) {
+const buttons = navBar.querySelectorAll('button');
+buttons.forEach((button, btnIndex) => {
+const icon = button.querySelector('i');
+if (screen === activeScreen) {
+if (btnIndex === index) {
+button.classList.add('text-primary', 'active');
+icon.className = `ri-${iconMap[screen]}-fill text-lg`;
+} else {
+button.classList.remove('text-primary', 'active');
+icon.className = `ri-${Object.values(iconMap)[btnIndex]}-line text-lg`;
+}
+}
+});
+}
+});
+}
+// Add click handlers for home navigation
+document.querySelectorAll('.fixed.bottom-0 button:first-child').forEach(button => {
+button.addEventListener('click', function() {
+const allScreens = ['dashboard', 'meal-plan', 'grocery-list', 'profile'];
+allScreens.forEach(screen => {
+const element = document.getElementById(screen);
+if (element) {
+if (screen === 'dashboard') {
+element.classList.remove('hidden');
+updateBottomNavigation('dashboard');
+} else {
+element.classList.add('hidden');
+}
+}
+});
+});
+});
+Object.entries(screens).forEach(([id, { hide, show }]) => {
+document.getElementById(id)?.addEventListener('click', function() {
+hide.forEach(screenId => {
+document.getElementById(screenId)?.classList.add('hidden');
+});
+document.getElementById(show).classList.remove('hidden');
+updateBottomNavigation(show);
+});
+});
+// Grocery List Functionality
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+checkbox.addEventListener('change', function() {
+const label = this.nextElementSibling;
+if (this.checked) {
+label.classList.add('line-through', 'text-gray-400');
+} else {
+label.classList.remove('line-through', 'text-gray-400');
+}
+});
+});
+// Profile Settings
+document.querySelectorAll('#profile button.text-primary').forEach(button => {
+button.addEventListener('click', function() {
+const action = this.textContent;
+showModal(action, '<p>This feature will be available soon!</p>');
+});
+});
+// Logout Handler
+document.querySelector('.ri-logout-box-line').parentElement.parentElement.addEventListener('click', function() {
+showModal('Logout', `
+<p class="mb-4">Are you sure you want to logout?</p>
+<div class="flex space-x-4">
+<button class="flex-1 py-2 bg-gray-200 rounded-button" onclick="this.closest('.fixed').remove()">Cancel</button>
+<button class="flex-1 py-2 bg-primary text-white rounded-button" onclick="location.reload()">Logout</button>
+</div>
+`);
+});
+});
+</script>
+</body>
+</html>
